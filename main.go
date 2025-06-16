@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/go-rod/rod"
+	"github.com/go-rod/rod/lib/devices"
 	"github.com/go-rod/rod/lib/launcher"
 	ffmpeg_go "github.com/u2takey/ffmpeg-go"
 	"os"
@@ -13,6 +14,7 @@ import (
 )
 
 func main() {
+
 	dir, _ := os.Getwd()
 	outputPath := filepath.Join(dir, "output.mp4")
 
@@ -59,7 +61,7 @@ func startFFmpeg(input, format, outputPath string) (*exec.Cmd, error) {
 	stream := ffmpeg_go.Input(input, ffmpeg_go.KwArgs{
 		"f":          format,
 		"framerate":  "30",
-		"video_size": "1366x768",
+		"video_size": "375x812",
 	}).Output(outputPath, ffmpeg_go.KwArgs{
 		"c:v": "libx264",
 		"y":   "",
@@ -78,13 +80,31 @@ func startFFmpeg(input, format, outputPath string) (*exec.Cmd, error) {
 }
 
 func runBrowser() {
-	url := launcher.New().Headless(false).MustLaunch()
+	url := launcher.New().
+		Headless(false). // show browser
+		MustLaunch()
 
 	browser := rod.New().ControlURL(url).MustConnect()
 	defer browser.MustClose()
 
-	page := browser.MustPage("https://example.com")
+	page := browser.MustPage("")                        // open blank first
+	page.MustEmulate(devices.IPhoneX)                   // emulate full mobile device
+	page.MustNavigate("https://ourmoment.my.id/art-1/") // load page
 	page.MustWaitLoad()
 
 	time.Sleep(5 * time.Second)
+}
+
+func testBrowser() {
+	url := launcher.New().
+		Headless(false). // show browser
+		MustLaunch()
+
+	browser := rod.New().ControlURL(url).MustConnect()
+	defer browser.MustClose()
+
+	page := browser.MustPage("")                        // open blank first
+	page.MustEmulate(devices.IPhone5orSE)               // emulate full mobile device
+	page.MustNavigate("https://ourmoment.my.id/art-1/") // load page
+	page.MustWaitLoad()
 }
