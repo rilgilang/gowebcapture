@@ -22,8 +22,6 @@ func main() {
 		path = "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"
 	}
 
-	//runBrowser(path)
-
 	dir, _ := os.Getwd()
 	outputPath := filepath.Join(dir, "output.mp4")
 
@@ -71,8 +69,8 @@ func startFFmpeg(input, format, outputPath string) (*exec.Cmd, error) {
 	stream := ffmpeg_go.Input(input, ffmpeg_go.KwArgs{
 		"f":          format,
 		"framerate":  "30",
-		"video_size": "375x812",
-	}).Output(outputPath, ffmpeg_go.KwArgs{
+		"video_size": "390x844",
+	}).Filter("crop", ffmpeg_go.Args{"720:1280:0:210"}).Output(outputPath, ffmpeg_go.KwArgs{
 		"c:v": "libx264",
 		"y":   "",
 	}).OverWriteOutput()
@@ -102,10 +100,12 @@ func runBrowser(browserPath string) {
 	page := browser.MustPage("")       // open blank first
 	page.MustEmulate(devices.GalaxyS5) // emulate full mobile device
 
+	page.MustSetWindow(0, 0, 360, 1024)
+
 	//page.MustNavigate("https://satumomen.com/preview/peresmian-rs")
-	page.MustNavigate("https://joinedwithshan.viding.co/")
+	//page.MustNavigate("https://joinedwithshan.viding.co/")
 	//page.MustNavigate("https://app.sangmempelai.id/pilihan-tema/sunda-01")
-	//page.MustNavigate("https://adirara.webnikah.com/?templatecoba=156/kepada:Budi%20dan%20Ani-Bandung")
+	page.MustNavigate("https://adirara.webnikah.com/?templatecoba=156/kepada:Budi%20dan%20Ani-Bandung")
 	//page.MustNavigate("https://ourmoment.my.id/art-6/")
 	page.MustWaitLoad()
 
