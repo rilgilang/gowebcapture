@@ -72,12 +72,15 @@ func startFFmpeg() (*exec.Cmd, error) {
 
 func runBrowser(browserPath string) {
 	now := time.Now()
-	url := launcher.New().
-		Bin(browserPath). // use Chrome instead of default Chromium
-		Headless(false).  // show browser
-		MustLaunch()
+	url := launcher.New()
 
-	browser := rod.New().ControlURL(url).MustConnect()
+	if browserPath != "" {
+		url.Bin(browserPath) // use Chrome instead of default Chromium
+	}
+
+	controlUrl := url.Headless(false).MustLaunch()
+
+	browser := rod.New().ControlURL(controlUrl).MustConnect()
 	defer browser.MustClose()
 
 	page := browser.MustPage("")       // open blank first
