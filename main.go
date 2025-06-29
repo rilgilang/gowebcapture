@@ -6,6 +6,7 @@ import (
 	"github.com/go-rod/rod/lib/devices"
 	"github.com/go-rod/rod/lib/launcher"
 	ffmpeg_go "github.com/u2takey/ffmpeg-go"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -21,16 +22,21 @@ func main() {
 		path = "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"
 	}
 
+	now := time.Now()
 	// Launch browser and interact
-	runBrowser(path)
+	err := runBrowser(path, now)
+
+	if err != nil {
+		fmt.Println("err --> ", err)
+	}
 
 	fmt.Println("Recording complete.")
 }
 
-func startFFmpeg() (*exec.Cmd, error) {
+func startFFmpeg(currentDateTime *time.Time) (*exec.Cmd, error) {
 
 	dir, _ := os.Getwd()
-	outputPath := filepath.Join(dir, "output.mp4")
+	outputPath := filepath.Join(dir, fmt.Sprintf(`%s.mp4`, currentDateTime.Format("2006-01-02-15-04-05")))
 
 	var input string
 	var format string
@@ -70,8 +76,20 @@ func startFFmpeg() (*exec.Cmd, error) {
 	return proc, nil
 }
 
-func runBrowser(browserPath string) {
-	now := time.Now()
+func stopFFmpeg(cmd *exec.Cmd) error {
+	if err := cmd.Process.Signal(os.Interrupt); err != nil {
+		fmt.Println("Failed to interrupt ffmpeg:", err)
+		if killErr := cmd.Process.Kill(); killErr != nil {
+			fmt.Println("Failed to kill ffmpeg:", killErr)
+		}
+		return err
+	}
+	_ = cmd.Wait()
+
+	return nil
+}
+
+func runBrowser(browserPath string, now time.Time) error {
 	url := launcher.New()
 
 	if browserPath != "" {
@@ -91,16 +109,18 @@ func runBrowser(browserPath string) {
 	//page.MustNavigate("https://satumomen.com/preview/peresmian-rs")
 	//page.MustNavigate("https://joinedwithshan.viding.co/")
 	//page.MustNavigate("https://app.sangmempelai.id/pilihan-tema/sunda-01")
-	page.MustNavigate("https://adirara.webnikah.com/?templatecoba=156/kepada:Budi%20dan%20Ani-Bandung")
+	//page.MustNavigate("https://adirara.webnikah.com/?templatecoba=156/kepada:Budi%20dan%20Ani-Bandung")
 	//page.MustNavigate("https://ourmoment.my.id/art-6/")
+	page.MustNavigate("http://127.0.0.1:8000")
+
 	page.MustWaitLoad()
 
 	// Start ffmpeg
 
-	cmd, err := startFFmpeg()
+	cmd, err := startFFmpeg(&now)
 	if err != nil {
 		fmt.Println("Failed to start ffmpeg:", err)
-		return
+		return err
 	}
 
 	// Find all possible clickable elements
@@ -127,7 +147,15 @@ func runBrowser(browserPath string) {
 	if target == nil {
 		fmt.Println("Element with text 'Buka Undangan' not found")
 		time.Sleep(1 * time.Second) // wait before exit
-		return
+
+		err = stopFFmpeg(cmd)
+
+		e := os.Remove(fmt.Sprintf(`%s.mp4`, now.Format("2006-01-02-15-04-05")))
+		if e != nil {
+			log.Fatal(e)
+		}
+
+		return err
 	}
 
 	time.Sleep(5 * time.Second) // First page wait
@@ -149,16 +177,15 @@ func runBrowser(browserPath string) {
 	// Wait a little after browser interaction
 	//time.Sleep(5 * time.Second)
 
-	if err := cmd.Process.Signal(os.Interrupt); err != nil {
-		fmt.Println("Failed to interrupt ffmpeg:", err)
-		if killErr := cmd.Process.Kill(); killErr != nil {
-			fmt.Println("Failed to kill ffmpeg:", killErr)
-		}
+	//Stop ffmpeg
+	err = stopFFmpeg(cmd)
+	if err != nil {
+		return err
 	}
-	_ = cmd.Wait()
 
 	//time.Sleep(1 * time.Second) // wait before exit
 	fmt.Println("end --> ", time.Now().Sub(now).Minutes())
+	return nil
 }
 
 func scrollToBottom(page *rod.Page, interval time.Duration, step int) {
