@@ -15,12 +15,19 @@ import (
 )
 
 func main() {
-
 	path := ""
 
 	if runtime.GOOS == "darwin" {
 		path = "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"
 	}
+
+	// Launch browser and interact
+	runBrowser(path)
+
+	fmt.Println("Recording complete.")
+}
+
+func startFFmpeg() (*exec.Cmd, error) {
 
 	dir, _ := os.Getwd()
 	outputPath := filepath.Join(dir, "output.mp4")
@@ -42,30 +49,6 @@ func main() {
 		format = "x11grab"
 	}
 
-	cmd, err := startFFmpeg(input, format, outputPath)
-	if err != nil {
-		fmt.Println("Failed to start ffmpeg:", err)
-		return
-	}
-
-	// Launch browser and interact
-	runBrowser(path)
-
-	// Wait a little after browser interaction
-	time.Sleep(5 * time.Second)
-
-	if err := cmd.Process.Signal(os.Interrupt); err != nil {
-		fmt.Println("Failed to interrupt ffmpeg:", err)
-		if killErr := cmd.Process.Kill(); killErr != nil {
-			fmt.Println("Failed to kill ffmpeg:", killErr)
-		}
-	}
-	_ = cmd.Wait()
-
-	fmt.Println("Recording complete. Saved to:", outputPath)
-}
-
-func startFFmpeg(input, format, outputPath string) (*exec.Cmd, error) {
 	stream := ffmpeg_go.Input(input, ffmpeg_go.KwArgs{
 		"f":          format,
 		"framerate":  "30",
@@ -109,6 +92,14 @@ func runBrowser(browserPath string) {
 	//page.MustNavigate("https://ourmoment.my.id/art-6/")
 	page.MustWaitLoad()
 
+	// Start ffmpeg
+
+	cmd, err := startFFmpeg()
+	if err != nil {
+		fmt.Println("Failed to start ffmpeg:", err)
+		return
+	}
+
 	// Find all possible clickable elements
 	elements := page.MustElements("a, button, div, span")
 
@@ -136,7 +127,7 @@ func runBrowser(browserPath string) {
 		return
 	}
 
-	time.Sleep(2 * time.Second) // First page wait
+	time.Sleep(5 * time.Second) // First page wait
 
 	target.MustClick()
 	//target.MustScrollIntoView()
@@ -152,7 +143,18 @@ func runBrowser(browserPath string) {
 	scrollInterval := 2 * time.Second // configurable scroll interval
 	scrollToBottom(page, scrollInterval, 450)
 
-	time.Sleep(1 * time.Second) // wait before exit
+	// Wait a little after browser interaction
+	//time.Sleep(5 * time.Second)
+
+	if err := cmd.Process.Signal(os.Interrupt); err != nil {
+		fmt.Println("Failed to interrupt ffmpeg:", err)
+		if killErr := cmd.Process.Kill(); killErr != nil {
+			fmt.Println("Failed to kill ffmpeg:", killErr)
+		}
+	}
+	_ = cmd.Wait()
+
+	//time.Sleep(1 * time.Second) // wait before exit
 	fmt.Println("end --> ", time.Now().Sub(now).Minutes())
 }
 
