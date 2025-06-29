@@ -54,12 +54,13 @@ func main() {
 	runBrowser(path)
 
 	// Wait a little after browser interaction
-	time.Sleep(1 * time.Second)
+	time.Sleep(5 * time.Second)
 
-	// Stop ffmpeg cleanly
-	fmt.Println("Stopping ffmpeg...")
 	if err := cmd.Process.Signal(os.Interrupt); err != nil {
-		fmt.Println("Failed to stop ffmpeg gracefully:", err)
+		fmt.Println("Failed to interrupt ffmpeg:", err)
+		if killErr := cmd.Process.Kill(); killErr != nil {
+			fmt.Println("Failed to kill ffmpeg:", killErr)
+		}
 	}
 	_ = cmd.Wait()
 
@@ -90,7 +91,6 @@ func startFFmpeg(input, format, outputPath string) (*exec.Cmd, error) {
 
 func runBrowser(browserPath string) {
 	now := time.Now()
-	fmt.Println("start --> ", now)
 	url := launcher.New().
 		Bin(browserPath). // use Chrome instead of default Chromium
 		Headless(false).  // show browser
