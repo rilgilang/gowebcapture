@@ -65,3 +65,14 @@ func StopFFmpeg(cmd *exec.Cmd) error {
 
 	return nil
 }
+
+func deleteUnusedOutput(time *time.Time) error {
+	dir, _ := os.Getwd()
+	outputPath := filepath.Join(dir, fmt.Sprintf(`/output/%s.mp4`, time.Format("2006-01-02-15-04-05")))
+
+	err := os.Remove(outputPath)
+	if err != nil {
+		fmt.Println("error deleting file: ", err)
+	}
+	return nil
+}

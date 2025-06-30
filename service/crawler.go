@@ -117,6 +117,7 @@ func (c *crawler) RunBrowserAndInteract(ctx context.Context, urlLink string) err
 		time.Sleep(1 * time.Second) // After Click button delay
 	}
 
+	//TODO make throttle is configurable
 	scrollToBottomSmoothWithThrottle(page, 3, 30) // 30px max step, ~60fps (16ms delay)
 
 	//Stop ffmpeg
@@ -125,9 +126,16 @@ func (c *crawler) RunBrowserAndInteract(ctx context.Context, urlLink string) err
 		return err
 	}
 
+	// Put output video to storage
 	if err = c.putOutputToStorage(ctx, &now); err != nil {
 		return err
 	}
+
+	// Remove output when done
+	if err = deleteUnusedOutput(&now); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -229,6 +237,7 @@ func isAtBottom(page *rod.Page) bool {
 	return result.Bool()
 }
 
+// TODO move this function to recorder.go
 func (c *crawler) putOutputToStorage(ctx context.Context, time *time.Time) error {
 
 	filePath := fmt.Sprintf(`/output/%s.mp4`, time.Format("2006-01-02-15-04-05"))
