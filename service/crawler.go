@@ -5,6 +5,7 @@ import (
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/devices"
 	"github.com/go-rod/rod/lib/launcher"
+	"os"
 	"runtime"
 	"strings"
 	"time"
@@ -40,13 +41,14 @@ func RunBrowser(urlLink string) error {
 
 	page.MustWaitLoad()
 
-	// Start ffmpeg
+	time.Sleep(2 * time.Second) // wait before exit
 
-	//cmd, err := StartFFmpeg(&now)
-	//if err != nil {
-	//	fmt.Println("Failed to start ffmpeg:", err)
-	//	return err
-	//}
+	// Start ffmpeg
+	cmd, err := StartFFmpeg(&now)
+	if err != nil {
+		fmt.Println("Failed to start ffmpeg:", err)
+		return err
+	}
 
 	// Find all possible clickable elements
 	elements := page.MustElements("a, button, div, span")
@@ -73,14 +75,14 @@ func RunBrowser(urlLink string) error {
 		fmt.Println("Element with text 'Buka Undangan' not found")
 		time.Sleep(1 * time.Second) // wait before exit
 
-		//err = StopFFmpeg(cmd)
-		//
-		//e := os.Remove(fmt.Sprintf(`%s.mp4`, now.Format("2006-01-02-15-04-05")))
-		//if e != nil {
-		//	fmt.Println("err --> ", err)
-		//}
-		//
-		//return err
+		err = StopFFmpeg(cmd)
+
+		e := os.Remove(fmt.Sprintf(`%s.mp4`, now.Format("2006-01-02-15-04-05")))
+		if e != nil {
+			fmt.Println("err --> ", err)
+		}
+
+		return err
 	}
 
 	time.Sleep(2 * time.Second) // First page wait
@@ -88,23 +90,23 @@ func RunBrowser(urlLink string) error {
 	target.MustClick()
 	//target.MustScrollIntoView()
 
-	//videoExists := page.MustEval(`() => !!document.querySelector("video.elementor-background-video-hosted")`).Bool()
+	videoExists := page.MustEval(`() => !!document.querySelector("video.elementor-background-video-hosted")`).Bool()
 
-	//if videoExists {
-	//	time.Sleep(13 * time.Second) // After Click button delay
-	//} else {
-	time.Sleep(1 * time.Second) // After Click button delay
-	//}
+	if videoExists {
+		time.Sleep(13 * time.Second) // After Click button delay
+	} else {
+		time.Sleep(1 * time.Second) // After Click button delay
+	}
 
 	//scrollInterval := 2 * time.Second // configurable scroll interval
 	//scrollToBottom(page, scrollInterval, 450)
-	scrollToBottomSmoothWithThrottle(page, 8, 30) // 30px max step, ~60fps (16ms delay)
+	scrollToBottomSmoothWithThrottle(page, 3, 30) // 30px max step, ~60fps (16ms delay)
 
-	////Stop ffmpeg
-	//err = StopFFmpeg(cmd)
-	//if err != nil {
-	//	return err
-	//}
+	//Stop ffmpeg
+	err = StopFFmpeg(cmd)
+	if err != nil {
+		return err
+	}
 
 	//time.Sleep(1 * time.Second) // wait before exit
 	fmt.Println("end --> ", time.Now().Sub(now).Minutes())
