@@ -1,17 +1,37 @@
 package service
 
 import (
+	"context"
 	"fmt"
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/devices"
 	"github.com/go-rod/rod/lib/launcher"
+	"go-web-screen-record/bootstrap"
+	"go-web-screen-record/pkg"
+	"io"
 	"os"
 	"runtime"
 	"strings"
 	"time"
 )
 
-func RunBrowser(urlLink string) error {
+type Crawler interface {
+	RunBrowserAndInteract(ctx context.Context, urlLink string) error
+}
+
+type crawler struct {
+	storage pkg.Storage
+	config  *bootstrap.Config
+}
+
+func NewCrawler(storage pkg.Storage, config *bootstrap.Config) Crawler {
+	return &crawler{
+		storage: storage,
+		config:  config,
+	}
+}
+
+func (c *crawler) RunBrowserAndInteract(ctx context.Context, urlLink string) error {
 
 	path := ""
 
@@ -88,7 +108,6 @@ func RunBrowser(urlLink string) error {
 	time.Sleep(2 * time.Second) // First page wait
 
 	target.MustClick()
-	//target.MustScrollIntoView()
 
 	videoExists := page.MustEval(`() => !!document.querySelector("video.elementor-background-video-hosted")`).Bool()
 
@@ -98,8 +117,6 @@ func RunBrowser(urlLink string) error {
 		time.Sleep(1 * time.Second) // After Click button delay
 	}
 
-	//scrollInterval := 2 * time.Second // configurable scroll interval
-	//scrollToBottom(page, scrollInterval, 450)
 	scrollToBottomSmoothWithThrottle(page, 3, 30) // 30px max step, ~60fps (16ms delay)
 
 	//Stop ffmpeg
@@ -108,37 +125,11 @@ func RunBrowser(urlLink string) error {
 		return err
 	}
 
-	//time.Sleep(1 * time.Second) // wait before exit
-	fmt.Println("end --> ", time.Now().Sub(now).Minutes())
+	if err = c.putOutputToStorage(ctx, &now); err != nil {
+		return err
+	}
 	return nil
 }
-
-//func scrollToBottom(page *rod.Page, interval time.Duration, step int) {
-//	for {
-//		// Get current scroll position and total height
-//		pos := page.MustEval(`() => window.scrollY`).Int()
-//		height := page.MustEval(`() => document.body.scrollHeight`).Int()
-//
-//		// Stop if we are at or near the bottom
-//		if pos+step >= height {
-//			page.MustEval(`() => window.scrollTo(0, document.body.scrollHeight)`)
-//			fmt.Println("Reached the bottom.")
-//			break
-//		}
-//
-//		// Scroll by step
-//		script := fmt.Sprintf("() => window.scrollTo(0, %d)", pos+step)
-//		page.MustEval(script)
-//
-//		// Wait for new content to possibly load
-//		time.Sleep(interval)
-//
-//		if isAtBottom(page) {
-//			fmt.Println("Reached the bottom.")
-//			break
-//		}
-//	}
-//}
 
 func scrollToBottomSmoothWithThrottle(page *rod.Page, maxStep int, delayMs int) {
 	script := fmt.Sprintf(`() => {
@@ -236,4 +227,39 @@ func isAtBottom(page *rod.Page) bool {
 		return (window.innerHeight + window.scrollY) >= (document.body.scrollHeight - 100);
 	}`)
 	return result.Bool()
+}
+
+func (c *crawler) putOutputToStorage(ctx context.Context, time *time.Time) error {
+
+	filePath := fmt.Sprintf(`/output/%s.mp4`, time.Format("2006-01-02-15-04-05"))
+
+	// Open the file
+	file, err := os.Open(filePath)
+	if err != nil {
+		fmt.Println("err open file: ", err)
+		return err
+	}
+
+	stat, err := file.Stat()
+	if err != nil {
+		fmt.Println("Error reading file stats: ", err)
+		return err
+	}
+	stat.Size()
+
+	defer file.Close() // Ensure the file is closed after function exits
+
+	// Read all content from the file into a byte slice
+	data, err := io.ReadAll(file)
+	if err != nil {
+		fmt.Println("Error reading file: ", err)
+		return err
+	}
+
+	if err := c.storage.Put(ctx, c.config.StorageBucket, filePath, data, stat.Size(), true, "video/mp4"); err != nil {
+		fmt.Println("Error put file to storage: ", err)
+		return err
+	}
+
+	return nil
 }

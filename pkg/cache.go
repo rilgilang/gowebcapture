@@ -14,13 +14,7 @@ type cachePkg struct {
 	client *redis.Client
 }
 
-func NewCache() Cache {
-	client := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "wXU7z2HQtBP6mWjHbPsfK96rmnqweawg", // no password set
-		DB:       0,                                  // use default DB
-	})
-
+func NewCache(client *redis.Client) Cache {
 	return &cachePkg{
 		client: client,
 	}

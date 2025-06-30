@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"go-web-screen-record/bootstrap"
 	"go-web-screen-record/pkg"
 	"go-web-screen-record/service"
 )
@@ -15,11 +16,18 @@ func main() {
 	//https://adirara.webnikah.com/?templatecoba=156/kepada:Budi%20dan%20Ani-Bandung
 	//https://ourmoment.my.id/art-6
 
-	cache := pkg.NewCache()
+	bootstrapClienter, config, err := bootstrap.Setup()
+	if err != nil {
+		panic(err)
+	}
+
+	cache := pkg.NewCache(bootstrapClienter.Cache)
+
+	storage := pkg.NewStorage(bootstrapClienter.Storage)
+
+	crawler := service.NewCrawler(storage, config)
 
 	ctx := context.Background()
-
-	cache.Lpush(ctx, "video_queue", "https://ourmoment.my.id/art-6")
 
 	for {
 		urlLink, err := cache.BRpop(ctx, "video_queue")
@@ -29,7 +37,7 @@ func main() {
 		}
 
 		// Launch browser and interact
-		err = service.RunBrowser(urlLink)
+		err = crawler.RunBrowserAndInteract(ctx, urlLink)
 
 		if err != nil {
 			fmt.Println("err processing --> ", err)
