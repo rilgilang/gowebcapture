@@ -120,7 +120,7 @@ ENV PROJECT_DIR=/go/src/github.com/rilgilang/gowebcapture
 WORKDIR $PROJECT_DIR
 
 # Copy app binary from builder
-COPY --from=builder /go/src/github.com/rilgilang/gowebcapture/gowebcapture .
+COPY --from=builder /go/src/github.com/rilgilang/gowebcapture/webcapture .
 
 # Copy Chrome from builder stage
 COPY --from=builder /usr/bin/google-chrome /usr/bin/google-chrome
@@ -128,7 +128,7 @@ COPY --from=builder /usr/share/man/man1/google-chrome.1.gz /usr/share/man/man1/
 COPY --from=builder /opt/google/chrome /opt/google/chrome
 
 # Make binary executable
-RUN chmod +x gowebcapture
+RUN chmod +x webcapture
 
 # Launch Xvfb and run your app
-CMD ["sh", "-c", "Xvfb :99 -screen 0 1280x720x24 & ./gowebcapture"]
+CMD ["sh", "-c", "Xvfb :99 -screen 0 1280x720x24 & ./webcapture"]
