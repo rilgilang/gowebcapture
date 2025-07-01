@@ -1,0 +1,8 @@
+version: '3.8'
+services:
+  gowebcapture:
+    build: .
+    env_file:
+      - .env
+    volumes:
+      - ./:/go/src/app/webcapture/

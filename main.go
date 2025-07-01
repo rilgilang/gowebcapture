@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"go-web-screen-record/bootstrap"
-	"go-web-screen-record/pkg"
-	"go-web-screen-record/service"
+	"go/src/github.com/rilgilang/gowebcapture/bootstrap"
+	"go/src/github.com/rilgilang/gowebcapture/pkg"
+	"go/src/github.com/rilgilang/gowebcapture/service"
 )
 
 func main() {

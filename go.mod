@@ -1,4 +1,4 @@
-module go-web-screen-record
+module go/src/github.com/rilgilang/gowebcapture
 
 go 1.23.0
 
