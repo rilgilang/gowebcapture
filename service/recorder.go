@@ -11,7 +11,7 @@ import (
 )
 
 func StartFFmpeg(currentDateTime *time.Time) (*exec.Cmd, error) {
-
+	fmt.Println("start ffmpeg")
 	dir, _ := os.Getwd()
 	outputPath := filepath.Join(dir, fmt.Sprintf(`/output/%s.mp4`, currentDateTime.Format("2006-01-02-15-04-05")))
 

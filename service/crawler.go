@@ -35,8 +35,16 @@ func (c *crawler) RunBrowserAndInteract(ctx context.Context, urlLink string) err
 
 	path := ""
 
-	if runtime.GOOS == "darwin" {
-		path = "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"
+	switch runtime.GOOS {
+	case "darwin":
+		// macOS with Brave Browser
+		path = c.config.DarwinBrowserPath
+	case "linux":
+		// Linux inside Docker with Google Chrome
+		path = c.config.LinuxBrowserPath
+	default:
+		fmt.Println("Unsupported OS:", runtime.GOOS)
+		os.Exit(1)
 	}
 
 	now := time.Now()
@@ -45,6 +53,8 @@ func (c *crawler) RunBrowserAndInteract(ctx context.Context, urlLink string) err
 
 	if path != "" {
 		url.Bin(path) // use Chrome instead of default Chromium
+		url.RemoteDebuggingPort(3000)
+		// url.Set("display", ":99")
 	}
 
 	controlUrl := url.Headless(false).MustLaunch()
@@ -132,9 +142,9 @@ func (c *crawler) RunBrowserAndInteract(ctx context.Context, urlLink string) err
 	}
 
 	// Remove output when done
-	if err = deleteUnusedOutput(&now); err != nil {
-		return err
-	}
+	//if err = deleteUnusedOutput(&now); err != nil {
+	//	return err
+	//}
 
 	return nil
 }

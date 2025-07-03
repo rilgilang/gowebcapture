@@ -2,7 +2,21 @@ version: '3.8'
 services:
   gowebcapture:
     build: .
+    container_name: go-web-rod-chrome
+    ports:
+      - "5900:5900"  # VNC access
     env_file:
       - .env
+    networks:
+      - aio_default
     volumes:
-      - .env:/go/src/github.com/rilgilang/gowebcapture/.env
+      - .env:/app/.env
+      # - /var/run/dbus/system_bus_socket:/var/run/dbus/system_bus_socket  # Add this line
+    environment:
+      - DISPLAY=:99
+      - DBUS_SESSION_BUS_ADDRESS=unix:path=/var/run/dbus/system_bus_socket  # Add this line
+    privileged: true  # Recommended for D-Bus access
+
+networks:
+  aio_default:
+    external: true
