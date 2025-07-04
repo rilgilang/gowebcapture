@@ -11,7 +11,7 @@ services:
       - aio_default
     volumes:
       - .env:/app/.env
-      # - /var/run/dbus/system_bus_socket:/var/run/dbus/system_bus_socket  # Add this line
+       - /var/run/dbus/system_bus_socket:/var/run/dbus/system_bus_socket  # Add this line
     environment:
       - DISPLAY=:99
       - DBUS_SESSION_BUS_ADDRESS=unix:path=/var/run/dbus/system_bus_socket  # Add this line

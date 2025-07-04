@@ -1,3 +1,6 @@
 output.*
 example output
 gin-bin
+.env
+.DS_STORE
+.idea
