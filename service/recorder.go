@@ -34,24 +34,34 @@ func StartFFmpeg(currentDateTime *time.Time, cfg *bootstrap.Config) (*exec.Cmd, 
 		format = "x11grab"
 	}
 
-	stream := ffmpeg_go.Input(input, ffmpeg_go.KwArgs{
-		"f":          format,
-		"framerate":  cfg.FFMPEGFramerate,
-		"video_size": cfg.FFMPEGVideoSize,
-	})
-
+	stream := &ffmpeg_go.Stream{}
 	if cfg.FFMPEGCrop {
-		stream.Filter("crop", ffmpeg_go.Args{cfg.FFMPEGCropSize})
+		stream = ffmpeg_go.Input(input, ffmpeg_go.KwArgs{
+			"f":          format,
+			"framerate":  cfg.FFMPEGFramerate,
+			"video_size": cfg.FFMPEGVideoSize,
+		}).Filter("crop", ffmpeg_go.Args{cfg.FFMPEGCropSize}).Output(outputPath, ffmpeg_go.KwArgs{
+			"c:v":      "libx264",
+			"pix_fmt":  "yuv420p",    // ✅ Add this
+			"preset":   "ultrafast",  // Optional, faster encoding for testing
+			"movflags": "+faststart", // ✅ Make .mp4 streamable/playable before full download
+			"vsync":    "2",
+			"y":        "",
+		}).OverWriteOutput()
+	} else {
+		stream = ffmpeg_go.Input(input, ffmpeg_go.KwArgs{
+			"f":          format,
+			"framerate":  cfg.FFMPEGFramerate,
+			"video_size": cfg.FFMPEGVideoSize,
+		}).Output(outputPath, ffmpeg_go.KwArgs{
+			"c:v":      "libx264",
+			"pix_fmt":  "yuv420p",    // ✅ Add this
+			"preset":   "ultrafast",  // Optional, faster encoding for testing
+			"movflags": "+faststart", // ✅ Make .mp4 streamable/playable before full download
+			"vsync":    "2",
+			"y":        "",
+		}).OverWriteOutput()
 	}
-
-	stream.Output(outputPath, ffmpeg_go.KwArgs{
-		"c:v":      "libx264",
-		"pix_fmt":  "yuv420p",    // ✅ Add this
-		"preset":   "ultrafast",  // Optional, faster encoding for testing
-		"movflags": "+faststart", // ✅ Make .mp4 streamable/playable before full download
-		"vsync":    "2",
-		"y":        "",
-	}).OverWriteOutput()
 
 	cmd := stream.Compile()
 	proc := exec.Command(cmd.Path, cmd.Args[1:]...)
