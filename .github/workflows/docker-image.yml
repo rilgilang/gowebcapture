@@ -64,6 +64,3 @@ jobs:
 
             echo "Starting new container..."
             docker compose up -d
-            
-            # echo "Restarting traefik..."
-            # docker restart traefik
