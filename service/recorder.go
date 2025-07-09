@@ -52,7 +52,7 @@ func StartFFmpeg(currentDateTime *time.Time, cfg *bootstrap.Config, dir string) 
 			"f":          format,
 			"framerate":  cfg.FFMPEGFramerate,
 			"video_size": cfg.FFMPEGVideoSize,
-			"draw_mouse": 0,
+			//"draw_mouse": 0,
 		}).Output(outputPath, ffmpeg_go.KwArgs{
 			"c:v":      "libx264",
 			"pix_fmt":  "yuv420p",    // ✅ Add this
