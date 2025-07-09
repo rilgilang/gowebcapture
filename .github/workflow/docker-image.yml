@@ -3,7 +3,7 @@ name: Deploy to VPS via GHCR
 on:
   push:
     branches:
-      - develop
+      - master
 
 env:
   IMAGE_NAME: "ghcr.io/${{ github.repository_owner }}/gowebcapture"
