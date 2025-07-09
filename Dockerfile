@@ -133,4 +133,4 @@ COPY --from=builder /opt/brave.com /opt/brave.com
 RUN chmod +x webcapture
 
 # Launch Xvfb and run your app
-CMD ["sh", "-c", "Xvfb :99 -screen 0 1280x1490x24 & ./webcapture"]
+CMD ["sh", "-c", "Xvfb :99 -screen 0 360x1024x24 & ./webcapture"]
