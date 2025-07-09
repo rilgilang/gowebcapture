@@ -50,18 +50,20 @@ jobs:
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            echo "Pulling latest docker-compose.yaml..."
-            cd $VPS_APP_PATH/
-            
-            echo "Stopping existing container..."
-            docker compose down
+              export VPS_APP_PATH=~/app/gowebcapture
 
-            echo "Delete unused images"
-            docker image prune -a -f
+              echo "Pulling latest docker-compose.yaml..."
+              cd $VPS_APP_PATH
 
-            echo "Pulling latest image..."
-            docker login ghcr.io -u ${{ github.actor }} --password ${{ secrets.GH_TOKEN }}
-            docker pull ghcr.io/${{ github.repository_owner }}/gowebcapture:latest
+              echo "Stopping existing container..."
+              docker compose down
 
-            echo "Starting new container..."
-            docker compose up -d
+              echo "Delete unused images"
+              docker image prune -a -f
+
+              echo "Pulling latest image..."
+              docker login ghcr.io -u ${{ github.actor }} --password ${{ secrets.GH_TOKEN }}
+              docker pull ghcr.io/${{ github.repository_owner }}/gowebcapture:latest
+
+              echo "Starting new container..."
+              docker compose up -d
