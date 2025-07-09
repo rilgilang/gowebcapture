@@ -66,6 +66,7 @@ FROM --platform=linux/amd64 debian:bullseye-slim
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y \
     ffmpeg \
+    procps \
     xvfb \
     imagemagick \
     x11-apps \
