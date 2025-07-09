@@ -24,8 +24,12 @@ type Config struct {
 	RedisHost              string `json:"redis_host"`
 	RedisPassword          string `json:"redis_password"`
 	RedisDB                int    `json:"redis_db"`
-	LinuxBrowserPath       string `json:"LINUX_BROWSER_PATH"`
-	DarwinBrowserPath      string `json:"DARWIN_BROWSER_PATH"`
+	LinuxBrowserPath       string `json:"linux_browser_path"`
+	DarwinBrowserPath      string `json:"darwin_browser_path"`
+	FFMPEGFramerate        string `json:"ffmpeg_framerate"`
+	FFMPEGVideoSize        string `json:"ffmpeg_video_size"`
+	FFMPEGCrop             bool   `json:"ffmpeg_crop"`
+	FFMPEGCropSize         string `json:"ffmpeg_crop_size"`
 }
 
 func Setup() (client *BoostrapClient, config *Config, err error) {
@@ -67,6 +71,11 @@ func setupConfig() *Config {
 		panic(err)
 	}
 
+	ffmpegCrop, err := strconv.ParseBool(os.Getenv("FFMPEG_CROP"))
+	if err != nil {
+		panic(err)
+	}
+
 	return &Config{
 		StorageAccessKey:       os.Getenv("STORAGE_ACCESS_KEY"),
 		StorageSecretAccessKey: os.Getenv("STORAGE_SECRET_ACCESS_KEY"),
@@ -78,5 +87,9 @@ func setupConfig() *Config {
 		RedisDB:                0,
 		DarwinBrowserPath:      os.Getenv("DARWIN_BROWSER_PATH"),
 		LinuxBrowserPath:       os.Getenv("LINUX_BROWSER_PATH"),
+		FFMPEGFramerate:        os.Getenv("FFMPEG_FRAMERATE"),
+		FFMPEGVideoSize:        os.Getenv("FFMPEG_VIDEO_SIZE"),
+		FFMPEGCrop:             ffmpegCrop,
+		FFMPEGCropSize:         os.Getenv("FFMPEG_CROP_SIZE"),
 	}
 }

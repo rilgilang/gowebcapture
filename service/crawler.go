@@ -74,7 +74,7 @@ func (c *crawler) RunBrowserAndInteract(ctx context.Context, urlLink string) err
 	time.Sleep(2 * time.Second) // wait before exit
 
 	// Start ffmpeg
-	cmd, err := StartFFmpeg(&now)
+	cmd, err := StartFFmpeg(&now, c.config)
 	if err != nil {
 		fmt.Println("Failed to start ffmpeg:", err)
 		return err

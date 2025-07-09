@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"go/src/github.com/rilgilang/gowebcapture/bootstrap"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -11,7 +12,7 @@ import (
 	ffmpeg_go "github.com/u2takey/ffmpeg-go"
 )
 
-func StartFFmpeg(currentDateTime *time.Time) (*exec.Cmd, error) {
+func StartFFmpeg(currentDateTime *time.Time, cfg *bootstrap.Config) (*exec.Cmd, error) {
 
 	dir, _ := os.Getwd()
 	outputPath := filepath.Join(dir, fmt.Sprintf(`/output/%s.mp4`, currentDateTime.Format("2006-01-02-15-04-05")))
@@ -35,12 +36,20 @@ func StartFFmpeg(currentDateTime *time.Time) (*exec.Cmd, error) {
 
 	stream := ffmpeg_go.Input(input, ffmpeg_go.KwArgs{
 		"f":          format,
-		"framerate":  "30",
-		"video_size": "1280x1490", // ⬅️ Increased resolution
-	}).Filter("crop", ffmpeg_go.Args{"720:1280:0:210"}).Output(outputPath, ffmpeg_go.KwArgs{
-		"c:v": "libx264",
-		"y":   "",
+		"framerate":  cfg.FFMPEGFramerate,
+		"video_size": cfg.FFMPEGVideoSize,
+	}).Output(outputPath, ffmpeg_go.KwArgs{
+		"c:v":      "libx264",
+		"pix_fmt":  "yuv420p",    // ✅ Add this
+		"preset":   "ultrafast",  // Optional, faster encoding for testing
+		"movflags": "+faststart", // ✅ Make .mp4 streamable/playable before full download
+		"vsync":    "2",
+		"y":        "",
 	}).OverWriteOutput()
+
+	if cfg.FFMPEGCrop {
+		stream.Filter("crop", ffmpeg_go.Args{cfg.FFMPEGCropSize})
+	}
 
 	cmd := stream.Compile()
 	proc := exec.Command(cmd.Path, cmd.Args[1:]...)
