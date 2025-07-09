@@ -10,6 +10,7 @@ import (
 	"go/src/github.com/rilgilang/gowebcapture/pkg"
 	"io"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
@@ -34,6 +35,7 @@ func NewCrawler(storage pkg.Storage, config *bootstrap.Config) Crawler {
 func (c *crawler) RunBrowserAndInteract(ctx context.Context, urlLink string) error {
 
 	path := ""
+	dir, _ := os.Getwd() // Used for output file
 
 	switch runtime.GOOS {
 	case "darwin":
@@ -84,7 +86,7 @@ func (c *crawler) RunBrowserAndInteract(ctx context.Context, urlLink string) err
 	time.Sleep(2 * time.Second) // wait before exit
 
 	// Start ffmpeg
-	cmd, err := StartFFmpeg(&now, c.config)
+	cmd, err := StartFFmpeg(&now, c.config, dir)
 	if err != nil {
 		fmt.Println("Failed to start ffmpeg:", err)
 		return err
@@ -147,7 +149,7 @@ func (c *crawler) RunBrowserAndInteract(ctx context.Context, urlLink string) err
 	}
 
 	// Put output video to storage
-	if err = c.putOutputToStorage(ctx, &now); err != nil {
+	if err = c.putOutputToStorage(ctx, &now, dir); err != nil {
 		return err
 	}
 
@@ -258,9 +260,9 @@ func isAtBottom(page *rod.Page) bool {
 }
 
 // TODO move this function to recorder.go
-func (c *crawler) putOutputToStorage(ctx context.Context, time *time.Time) error {
+func (c *crawler) putOutputToStorage(ctx context.Context, currentDateTime *time.Time, dir string) error {
 
-	filePath := fmt.Sprintf(`./output/%s.mp4`, time.Format("2006-01-02-15-04-05"))
+	filePath := filepath.Join(dir, fmt.Sprintf(`/output/%s.mp4`, currentDateTime.Format("2006-01-02-15-04-05")))
 
 	// Open the file
 	file, err := os.Open(filePath)

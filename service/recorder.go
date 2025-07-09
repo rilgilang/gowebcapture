@@ -12,9 +12,8 @@ import (
 	ffmpeg_go "github.com/u2takey/ffmpeg-go"
 )
 
-func StartFFmpeg(currentDateTime *time.Time, cfg *bootstrap.Config) (*exec.Cmd, error) {
+func StartFFmpeg(currentDateTime *time.Time, cfg *bootstrap.Config, dir string) (*exec.Cmd, error) {
 
-	dir, _ := os.Getwd()
 	outputPath := filepath.Join(dir, fmt.Sprintf(`/output/%s.mp4`, currentDateTime.Format("2006-01-02-15-04-05")))
 
 	var input string
