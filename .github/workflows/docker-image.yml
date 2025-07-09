@@ -47,6 +47,7 @@ jobs:
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             echo "Pulling latest docker-compose.yaml..."
