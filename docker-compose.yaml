@@ -1,8 +1,22 @@
 version: '3.8'
 services:
   gowebcapture:
-    build: .
+    image: gowebcapture
     env_file:
       - .env
     volumes:
-      - ./:/go/src/app/webcapture/
+      - ./.env:/go/src/github.com/rilgilang/gowebcapture/.env
+      - /var/run/dbus/system_bus_socket:/var/run/dbus/system_bus_socket  # Add this line
+      - ./output:/go/src/github.com/rilgilang/gowebcapture/output
+    environment:
+      - DISPLAY=:99
+      - DBUS_SESSION_BUS_ADDRESS=unix:path=/var/run/dbus/system_bus_socket  # Add this line
+    privileged: true  # Recommended for D-Bus access
+    env_file:
+      - .env
+    networks:
+      - aio_default  # ✅ Add this line
+
+networks:
+  aio_default:
+    external: true

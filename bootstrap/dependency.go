@@ -24,6 +24,8 @@ type Config struct {
 	RedisHost              string `json:"redis_host"`
 	RedisPassword          string `json:"redis_password"`
 	RedisDB                int    `json:"redis_db"`
+	LinuxBrowserPath       string `json:"LINUX_BROWSER_PATH"`
+	DarwinBrowserPath      string `json:"DARWIN_BROWSER_PATH"`
 }
 
 func Setup() (client *BoostrapClient, config *Config, err error) {
@@ -74,5 +76,7 @@ func setupConfig() *Config {
 		RedisHost:              os.Getenv("REDIS_HOST"),
 		RedisPassword:          os.Getenv("REDIS_PASSWORD"),
 		RedisDB:                0,
+		DarwinBrowserPath:      os.Getenv("DARWIN_BROWSER_PATH"),
+		LinuxBrowserPath:       os.Getenv("LINUX_BROWSER_PATH"),
 	}
 }
