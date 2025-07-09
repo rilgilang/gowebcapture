@@ -2,12 +2,13 @@ package service
 
 import (
 	"fmt"
-	ffmpeg_go "github.com/u2takey/ffmpeg-go"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"time"
+
+	ffmpeg_go "github.com/u2takey/ffmpeg-go"
 )
 
 func StartFFmpeg(currentDateTime *time.Time) (*exec.Cmd, error) {
@@ -34,8 +35,8 @@ func StartFFmpeg(currentDateTime *time.Time) (*exec.Cmd, error) {
 
 	stream := ffmpeg_go.Input(input, ffmpeg_go.KwArgs{
 		"f":          format,
-		"framerate":  "120",
-		"video_size": "390x844",
+		"framerate":  "30",
+		"video_size": "1280x1490", // ⬅️ Increased resolution
 	}).Filter("crop", ffmpeg_go.Args{"720:1280:0:210"}).Output(outputPath, ffmpeg_go.KwArgs{
 		"c:v": "libx264",
 		"y":   "",
