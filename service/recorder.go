@@ -38,7 +38,13 @@ func StartFFmpeg(currentDateTime *time.Time, cfg *bootstrap.Config) (*exec.Cmd, 
 		"f":          format,
 		"framerate":  cfg.FFMPEGFramerate,
 		"video_size": cfg.FFMPEGVideoSize,
-	}).Output(outputPath, ffmpeg_go.KwArgs{
+	})
+
+	if cfg.FFMPEGCrop {
+		stream.Filter("crop", ffmpeg_go.Args{cfg.FFMPEGCropSize})
+	}
+
+	stream.Output(outputPath, ffmpeg_go.KwArgs{
 		"c:v":      "libx264",
 		"pix_fmt":  "yuv420p",    // ✅ Add this
 		"preset":   "ultrafast",  // Optional, faster encoding for testing
@@ -46,10 +52,6 @@ func StartFFmpeg(currentDateTime *time.Time, cfg *bootstrap.Config) (*exec.Cmd, 
 		"vsync":    "2",
 		"y":        "",
 	}).OverWriteOutput()
-
-	if cfg.FFMPEGCrop {
-		stream.Filter("crop", ffmpeg_go.Args{cfg.FFMPEGCropSize})
-	}
 
 	cmd := stream.Compile()
 	proc := exec.Command(cmd.Path, cmd.Args[1:]...)

@@ -62,7 +62,7 @@ func (c *crawler) RunBrowserAndInteract(ctx context.Context, urlLink string) err
 		Set("disable-features", "TranslateUI")
 
 	if path != "" {
-		url.Bin(path) // use Chrome instead of default Chromium
+		url.Bin(path)
 		url.RemoteDebuggingPort(3000)
 		// url.Set("display", ":99")
 	}
@@ -260,7 +260,7 @@ func isAtBottom(page *rod.Page) bool {
 // TODO move this function to recorder.go
 func (c *crawler) putOutputToStorage(ctx context.Context, time *time.Time) error {
 
-	filePath := fmt.Sprintf(`/output/%s.mp4`, time.Format("2006-01-02-15-04-05"))
+	filePath := fmt.Sprintf(`./output/%s.mp4`, time.Format("2006-01-02-15-04-05"))
 
 	// Open the file
 	file, err := os.Open(filePath)
