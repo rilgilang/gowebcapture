@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   gowebcapture:
-    image: gowebcapture
+    image: ghcr.io/rilgilang/gowebcapture
     env_file:
       - .env
     volumes:

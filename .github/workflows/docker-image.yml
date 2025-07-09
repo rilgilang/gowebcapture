@@ -66,7 +66,7 @@ jobs:
               docker image prune -a -f
 
               echo "Pulling latest image..."
-              docker login ghcr.io -u ${{ github.actor }} --password-stdin
+              docker login ghcr.io -u ${{ github.actor }} --password ${{ secrets.GH_TOKEN }}
               docker pull ghcr.io/${{ github.repository_owner }}/gowebcapture:latest
 
               echo "Starting new container..."
