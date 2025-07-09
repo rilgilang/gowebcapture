@@ -1,0 +1,65 @@
+name: Deploy to VPS via GHCR
+
+on:
+  push:
+    branches:
+      - master  # Runs when pushing to the master branch
+
+env:
+  IMAGE_NAME: "ghcr.io/${{ github.repository_owner }}/gowebcapture"
+  VPS_APP_PATH: "~/app/gowebcapture"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Login to GitHub Container Registry (GHCR)
+      - name: Login to GitHub Container Registry
+        run: echo "${{ secrets.GH_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Transfer Docker Compose File to VPS
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+          
+          scp ./docker-compose.yaml ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:$VPS_APP_PATH/
+
+      # Build and Push Docker Image to GHCR
+      - name: Build and Push Docker Image
+        run: |
+          docker build -t $IMAGE_NAME:latest -f ./Dockerfile .
+          docker push $IMAGE_NAME:latest
+
+      # Deploy on VPS using SSH
+      - name: Deploy on VPS
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            echo "Pulling latest docker-compose.yaml..."
+            cd $VPS_APP_PATH/
+            
+            echo "Stopping existing container..."
+            docker compose down
+
+            echo "Delete unused images"
+            docker image prune -a -f
+
+            echo "Pulling latest image..."
+            docker login ghcr.io -u ${{ github.actor }} --password ${{ secrets.GH_TOKEN }}
+            docker pull ghcr.io/${{ github.repository_owner }}/gowebcapture:latest
+
+            echo "Starting new container..."
+            docker compose up -d
+            
+            # echo "Restarting traefik..."
+            # docker restart traefik

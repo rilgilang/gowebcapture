@@ -43,16 +43,14 @@ RUN apt-get update && apt-get install -y \
     lsb-release \
     xdg-utils
 
-# Install Google Chrome
-RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list \
-    && apt-get update \
-    && apt-get install -y google-chrome-stable \
-    && rm -rf /var/lib/apt/lists/*
+# Install Brave Browser (AMD64)
+RUN apt-get install -y curl && \
+    curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg && \
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main" > /etc/apt/sources.list.d/brave-browser-release.list && \
+    apt-get update && apt-get install -y brave-browser
 
 # Set environment variables
 ENV DISPLAY=:99
-ENV CHROME_PATH=/usr/bin/google-chrome
 
 # Set Go project path
 WORKDIR /go/src/github.com/rilgilang/gowebcapture
@@ -69,6 +67,8 @@ FROM --platform=linux/amd64 debian:bullseye-slim
 RUN apt-get update && apt-get install -y \
     ffmpeg \
     xvfb \
+    imagemagick \
+    x11-apps \
     fonts-freefont-ttf \
     fonts-noto \
     fonts-liberation \
@@ -111,9 +111,11 @@ RUN apt-get update && apt-get install -y \
 RUN ln -snf /usr/share/zoneinfo/Asia/Jakarta /etc/localtime && \
     echo "Asia/Jakarta" > /etc/timezone
 
+# To make sur xvfb keep run when image is booting/reload
+RUN Xvfb -ac :99 -screen 0 720x1490x24 &
+
 # Set env vars
 ENV DISPLAY=:99
-ENV CHROME_PATH=/usr/bin/google-chrome
 ENV PROJECT_DIR=/go/src/github.com/rilgilang/gowebcapture
 
 # Create app directory
@@ -122,13 +124,12 @@ WORKDIR $PROJECT_DIR
 # Copy app binary from builder
 COPY --from=builder /go/src/github.com/rilgilang/gowebcapture/webcapture .
 
-# Copy Chrome from builder stage
-COPY --from=builder /usr/bin/google-chrome /usr/bin/google-chrome
-COPY --from=builder /usr/share/man/man1/google-chrome.1.gz /usr/share/man/man1/
-COPY --from=builder /opt/google/chrome /opt/google/chrome
+# Copy Brave from builder stage
+COPY --from=builder /usr/bin/brave-browser /usr/bin/brave-browser
+COPY --from=builder /opt/brave.com /opt/brave.com
 
 # Make binary executable
 RUN chmod +x webcapture
 
 # Launch Xvfb and run your app
-CMD ["sh", "-c", "Xvfb :99 -screen 0 1280x720x24 & ./webcapture"]
+CMD ["sh", "-c", "Xvfb :99 -screen 0 1280x1490x24 & ./webcapture"]
