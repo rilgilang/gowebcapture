@@ -12,8 +12,6 @@ services:
       - DISPLAY=:99
       - DBUS_SESSION_BUS_ADDRESS=unix:path=/var/run/dbus/system_bus_socket  # Add this line
     privileged: true  # Recommended for D-Bus access
-    env_file:
-      - .env
     networks:
       - aio_default  # ✅ Add this line
 
