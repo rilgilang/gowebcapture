@@ -49,7 +49,17 @@ func (c *crawler) RunBrowserAndInteract(ctx context.Context, urlLink string) err
 
 	now := time.Now()
 
-	url := launcher.New()
+	url := launcher.New().
+		Headless(false).
+		Set("start-fullscreen").
+		Set("window-size", "360,1024").
+		Delete("disable-gpu").
+		Set("disable-infobars").
+		Set("disable-notifications").
+		Set("disable-translate").
+		Set("noerrdialogs").
+		Set("no-default-browser-check").
+		Set("disable-features", "TranslateUI")
 
 	if path != "" {
 		url.Bin(path) // use Chrome instead of default Chromium
