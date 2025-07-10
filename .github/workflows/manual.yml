@@ -22,7 +22,6 @@ jobs:
   process-video:
     runs-on: ubuntu-latest
 
-    uses:
     steps:
       - name: Set Payload on Redis CLI
         uses: appleboy/ssh-action@v0.1.10
