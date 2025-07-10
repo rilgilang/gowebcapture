@@ -52,16 +52,10 @@ func (c *crawler) RunBrowserAndInteract(ctx context.Context, urlLink string) err
 	now := time.Now()
 
 	url := launcher.New().
-		Headless(false).
-		Set("start-fullscreen").
-		Set("window-size", "720,1280").
+		Headless(true).
 		Delete("disable-gpu").
-		Set("disable-infobars").
-		Set("disable-notifications").
-		Set("disable-translate").
-		Set("noerrdialogs").
-		Set("no-default-browser-check").
-		Set("disable-features", "TranslateUI")
+		Set("hide-scrollbars"). // Hide scrollbars
+		Leakless(true)
 
 	if path != "" {
 		url.Bin(path)
@@ -74,10 +68,10 @@ func (c *crawler) RunBrowserAndInteract(ctx context.Context, urlLink string) err
 	browser := rod.New().ControlURL(controlUrl).MustConnect()
 	defer browser.MustClose()
 
-	page := browser.MustPage("").MustWindowFullscreen() // open blank first
-	page.MustEmulate(devices.GalaxyS5)                  // emulate full mobile device
+	page := browser.MustPage("")         // open blank first
+	page.MustEmulate(devices.SurfaceDuo) // emulate full mobile device
 
-	page.MustSetWindow(0, 0, 720, 1280)
+	page.MustSetWindow(0, 0, 540, 800)
 
 	page.MustNavigate(urlLink)
 
