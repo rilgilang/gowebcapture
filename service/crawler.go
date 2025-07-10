@@ -54,7 +54,7 @@ func (c *crawler) RunBrowserAndInteract(ctx context.Context, urlLink string) err
 	url := launcher.New().
 		Headless(false).
 		Set("start-fullscreen").
-		Set("window-size", "360,640").
+		Set("window-size", "720,1280").
 		Delete("disable-gpu").
 		Set("disable-infobars").
 		Set("disable-notifications").
@@ -77,7 +77,7 @@ func (c *crawler) RunBrowserAndInteract(ctx context.Context, urlLink string) err
 	page := browser.MustPage("").MustWindowFullscreen() // open blank first
 	page.MustEmulate(devices.GalaxyS5)                  // emulate full mobile device
 
-	page.MustSetWindow(0, 0, 360, 640)
+	page.MustSetWindow(0, 0, 720, 1280)
 
 	page.MustNavigate(urlLink)
 
