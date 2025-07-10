@@ -70,7 +70,7 @@ func (c *crawler) RunBrowserAndInteract(ctx context.Context, urlLink string) err
 
 	page := browser.MustPage("")      // open blank first
 	page.MustEmulate(devices.IPadPro) // emulate full mobile device
-	page.MustSetWindow(0, 0, 1200, 2000)
+	page.MustSetWindow(0, 0, 720, 1280)
 
 	page.MustNavigate(urlLink)
 
