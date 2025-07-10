@@ -42,7 +42,7 @@ func StartFFmpeg(currentDateTime *time.Time, cfg *bootstrap.Config, dir string) 
 		}).Filter("crop", ffmpeg_go.Args{cfg.FFMPEGCropSize}).Output(outputPath, ffmpeg_go.KwArgs{
 			"c:v":      "libx264",
 			"pix_fmt":  "yuv420p",    // ✅ Add this
-			"preset":   "ultrafast",  // Optional, faster encoding for testing
+			"preset":   "medium",     // Optional, faster encoding for testing
 			"movflags": "+faststart", // ✅ Make .mp4 streamable/playable before full download
 			"vsync":    "2",
 			"y":        "",
@@ -56,7 +56,7 @@ func StartFFmpeg(currentDateTime *time.Time, cfg *bootstrap.Config, dir string) 
 		}).Output(outputPath, ffmpeg_go.KwArgs{
 			"c:v":      "libx264",
 			"pix_fmt":  "yuv420p",    // ✅ Add this
-			"preset":   "ultrafast",  // Optional, faster encoding for testing
+			"preset":   "medium",     // Optional, faster encoding for testing
 			"movflags": "+faststart", // ✅ Make .mp4 streamable/playable before full download
 			"vsync":    "2",
 			"y":        "",
