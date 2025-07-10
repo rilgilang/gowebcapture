@@ -33,29 +33,20 @@ jobs:
           script: |
             export VPS_APP_PATH=~/app/gowebcapture
             export IMAGE_NAME=ghcr.io/${{ github.repository_owner }}/gowebcapture
-            
+
             echo "Path       : $VPS_APP_PATH"
             echo "IMAGE_NAME : $IMAGE_NAME"
-            
+
             cd $VPS_APP_PATH
-            
-            echo "Exec redis-cli"
-            docker exec -it redis_svc bash
-            
-            redis-cli
-            
-            AUTH ${{ secrets.REDIS_AUTH_PASS }}
-            
-            LPUSH video_queue https://ourmoment.my.id/art-6
-            
-            exit
-          
-            echo "Exec wait 3 minutes"
+
+            echo "Pushing to Redis queue..."
+            docker exec redis_svc redis-cli -a "${{ secrets.REDIS_AUTH_PASS }}" LPUSH video_queue "${{ github.event.inputs.name }}"
+
+            echo "✅ Pushed to queue. Waiting 3 minutes for processing..."
             sleep 180
-            
-            echo "Print logs"
-            docker container logs gowebcapture-gowebcapture-1
-            
-            echo "Print list of generated video"
-            cd ./output
-            ls
+
+            echo "🧾 Container logs:"
+            docker logs gowebcapture-gowebcapture-1 || echo "Logs not found"
+
+            echo "📂 Generated videos:"
+            ls ./output || echo "Output directory not found"
