@@ -8,6 +8,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"os"
 	"strconv"
+	"time"
 )
 
 type BoostrapClient struct {
@@ -42,6 +43,11 @@ func Setup() (client *BoostrapClient, config *Config, err error) {
 		Creds:  credentials.NewStaticV4(config.StorageAccessKey, config.StorageSecretAccessKey, ""),
 		Secure: config.StorageSecure},
 	)
+
+	_, err = storage.HealthCheck(10 * time.Second)
+	if err != nil {
+		fmt.Println("error connecting mino --> ", err)
+	}
 
 	if err != nil {
 		return nil, nil, err
