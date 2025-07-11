@@ -68,8 +68,8 @@ func (c *crawler) RunBrowserAndInteract(ctx context.Context, urlLink string) err
 	browser := rod.New().ControlURL(controlUrl).MustConnect()
 	defer browser.MustClose()
 
-	page := browser.MustPage("")       // open blank first
-	page.MustEmulate(devices.Pixel2XL) // emulate full mobile device
+	page := browser.MustPage("")      // open blank first
+	page.MustEmulate(devices.Nexus6P) // emulate full mobile device
 	page.MustSetWindow(0, 0, 450, 850)
 
 	page.MustNavigate(urlLink)
