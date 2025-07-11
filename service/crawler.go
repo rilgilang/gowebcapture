@@ -133,7 +133,7 @@ func (c *crawler) RunBrowserAndInteract(ctx context.Context, urlLink string) err
 	}
 
 	//TODO make throttle is configurable
-	scrollToBottomSmoothWithThrottle(page, 3, 30) // 30px max step, ~60fps (16ms delay)
+	scrollToBottomSmoothWithThrottle(page, 3, 15) // 30px max step, ~60fps (16ms delay)
 
 	//Stop ffmpeg
 	err = StopFFmpeg(cmd)
@@ -211,11 +211,7 @@ func waitUntilScrollStops(page *rod.Page) {
 		pos := currentPos.Value.Int()
 
 		// Check if we've reached bottom
-		atBottom, err := page.Eval(`() => {
-            return window.innerHeight + window.scrollY >= document.body.scrollHeight - 10;
-        }`)
-
-		if err == nil && atBottom.Value.Bool() {
+		if err == nil && isAtBottom(page) {
 			time.Sleep(2 * time.Second) // Final wait at bottom
 			break
 		}

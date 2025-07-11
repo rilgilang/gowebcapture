@@ -10,12 +10,6 @@ import (
 
 func main() {
 
-	//https://satumomen.com/preview/peresmian-rs
-	//https://joinedwithshan.viding.co/
-	//https://app.sangmempelai.id/pilihan-tema/sunda-01
-	//https://adirara.webnikah.com/?templatecoba=156/kepada:Budi%20dan%20Ani-Bandung
-	//https://ourmoment.my.id/art-6
-
 	bootstrapClienter, config, err := bootstrap.Setup()
 	if err != nil {
 		panic(err)
