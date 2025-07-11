@@ -113,7 +113,7 @@ RUN ln -snf /usr/share/zoneinfo/Asia/Jakarta /etc/localtime && \
     echo "Asia/Jakarta" > /etc/timezone
 
 # To make sur xvfb keep run when image is booting/reload
-RUN Xvfb -ac :99 -screen 0 1200x2500x24 &
+RUN Xvfb -ac :99 -screen 0 400x700x24 &
 
 # Set env vars
 ENV DISPLAY=:99
@@ -133,4 +133,4 @@ COPY --from=builder /opt/brave.com /opt/brave.com
 RUN chmod +x webcapture
 
 # Launch Xvfb and run your app
-CMD ["sh", "-c", "Xvfb :99 -screen 0 1200x2500x24 -nocursor & ./webcapture"]
+CMD ["sh", "-c", "Xvfb :99 -screen 0 400x700x24 -nocursor & ./webcapture"]

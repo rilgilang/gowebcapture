@@ -68,25 +68,9 @@ func (c *crawler) RunBrowserAndInteract(ctx context.Context, urlLink string) err
 	browser := rod.New().ControlURL(controlUrl).MustConnect()
 	defer browser.MustClose()
 
-	page := browser.MustPage("") // open blank first
-	page.MustEmulate(devices.Device{
-		Title:     "MobilePortrait",
-		UserAgent: "Ipong wir", // or Android UA
-		//DeviceScaleFactor: 2.0,
-		//Mobile:            true,
-		Screen: devices.Screen{
-			DevicePixelRatio: 2.0,
-			Horizontal: devices.ScreenSize{
-				Width:  720,
-				Height: 1280,
-			},
-			Vertical: devices.ScreenSize{
-				Width:  720,
-				Height: 1280,
-			},
-		},
-	}) // emulate full mobile device
-	page.MustSetWindow(0, 0, 720, 1280)
+	page := browser.MustPage("")       // open blank first
+	page.MustEmulate(devices.Pixel2XL) // emulate full mobile device
+	page.MustSetWindow(0, 0, 450, 700)
 
 	page.MustNavigate(urlLink)
 
