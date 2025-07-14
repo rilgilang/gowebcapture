@@ -228,8 +228,8 @@ func waitUntilScrollStops(page *rod.Page) {
 			lastPosition = pos
 		}
 
-		// Timeout after 2 minutes
-		if time.Since(startTime) > 2*time.Minute {
+		// Timeout after 5 minutes
+		if time.Since(startTime) > 5*time.Minute {
 			fmt.Println("Scroll timeout reached")
 			break
 		}
