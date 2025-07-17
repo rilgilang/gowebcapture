@@ -161,6 +161,7 @@ func (c *crawler) RunBrowserAndInteract(ctx context.Context, urlLink string) err
 		return err
 	}
 
+	//fmt.Println("jmbd")
 	return nil
 }
 
