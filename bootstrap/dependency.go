@@ -6,12 +6,14 @@ import (
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/redis/go-redis/v9"
+	"gorm.io/gorm"
 	"os"
 	"strconv"
 	"time"
 )
 
 type BoostrapClient struct {
+	DB      *gorm.DB
 	Storage *minio.Client
 	Cache   *redis.Client
 }
@@ -25,6 +27,12 @@ type Config struct {
 	RedisHost              string `json:"redis_host"`
 	RedisPassword          string `json:"redis_password"`
 	RedisDB                int    `json:"redis_db"`
+	DBDialect              string `json:"db_dialect"`
+	DBHost                 string `json:"db_host"`
+	DBPort                 int    `json:"db_port"`
+	DBName                 string `json:"DB_NAME"`
+	DBUsername             string `json:"db_username"`
+	DBPassword             string `json:"db_password"`
 	LinuxBrowserPath       string `json:"linux_browser_path"`
 	DarwinBrowserPath      string `json:"darwin_browser_path"`
 	FFMPEGFramerate        string `json:"ffmpeg_framerate"`
@@ -60,7 +68,13 @@ func Setup() (client *BoostrapClient, config *Config, err error) {
 		DB:       config.RedisDB,
 	})
 
+	db, err := DatabaseConnection(config)
+	if err != nil {
+		panic(err)
+	}
+
 	return &BoostrapClient{
+		DB:      db,
 		Storage: storage,
 		Cache:   cache,
 	}, config, nil
@@ -82,6 +96,11 @@ func setupConfig() *Config {
 		panic(err)
 	}
 
+	dbPort, err := strconv.Atoi(os.Getenv("DB_PORT"))
+	if err != nil {
+		panic(err)
+	}
+
 	return &Config{
 		StorageAccessKey:       os.Getenv("STORAGE_ACCESS_KEY"),
 		StorageSecretAccessKey: os.Getenv("STORAGE_SECRET_ACCESS_KEY"),
@@ -91,6 +110,12 @@ func setupConfig() *Config {
 		RedisHost:              os.Getenv("REDIS_HOST"),
 		RedisPassword:          os.Getenv("REDIS_PASSWORD"),
 		RedisDB:                0,
+		DBHost:                 os.Getenv("DB_HOST"),
+		DBDialect:              os.Getenv("DB_DIALECT"),
+		DBUsername:             os.Getenv("DB_USERNAME"),
+		DBName:                 os.Getenv("DB_NAME"),
+		DBPassword:             os.Getenv("DB_PASSWORD"),
+		DBPort:                 dbPort,
 		DarwinBrowserPath:      os.Getenv("DARWIN_BROWSER_PATH"),
 		LinuxBrowserPath:       os.Getenv("LINUX_BROWSER_PATH"),
 		FFMPEGFramerate:        os.Getenv("FFMPEG_FRAMERATE"),

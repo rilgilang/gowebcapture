@@ -8,6 +8,7 @@ import (
 	"github.com/go-rod/rod/lib/launcher"
 	"go/src/github.com/rilgilang/gowebcapture/bootstrap"
 	"go/src/github.com/rilgilang/gowebcapture/pkg"
+	"go/src/github.com/rilgilang/gowebcapture/repositories"
 	"io"
 	"os"
 	"path/filepath"
@@ -21,14 +22,16 @@ type Crawler interface {
 }
 
 type crawler struct {
-	storage pkg.Storage
-	config  *bootstrap.Config
+	storage   pkg.Storage
+	videoRepo repositories.VideoRepository
+	config    *bootstrap.Config
 }
 
-func NewCrawler(storage pkg.Storage, config *bootstrap.Config) Crawler {
+func NewCrawler(storage pkg.Storage, videoRepo repositories.VideoRepository, config *bootstrap.Config) Crawler {
 	return &crawler{
-		storage: storage,
-		config:  config,
+		storage:   storage,
+		videoRepo: videoRepo,
+		config:    config,
 	}
 }
 
@@ -142,12 +145,19 @@ func (c *crawler) RunBrowserAndInteract(ctx context.Context, urlLink string) err
 	}
 
 	// Put output video to storage
-	if err = c.putOutputToStorage(ctx, &now, dir); err != nil {
+	storagePath, err := c.putOutputToStorage(ctx, &now, dir)
+	if err != nil {
 		return err
 	}
 
 	// Remove output when done
 	if err = deleteUnusedOutput(&now); err != nil {
+		return err
+	}
+
+	// Save directory location to db
+	_, err = c.videoRepo.SaveProcessedVideoURL(ctx, storagePath)
+	if err != nil {
 		return err
 	}
 
@@ -228,8 +238,8 @@ func waitUntilScrollStops(page *rod.Page) {
 			lastPosition = pos
 		}
 
-		// Timeout after 2 minutes
-		if time.Since(startTime) > 2*time.Minute {
+		// Timeout after 15 minutes
+		if time.Since(startTime) > 15*time.Minute {
 			fmt.Println("Scroll timeout reached")
 			break
 		}
@@ -249,7 +259,7 @@ func isAtBottom(page *rod.Page) bool {
 }
 
 // TODO move this function to recorder.go
-func (c *crawler) putOutputToStorage(ctx context.Context, currentDateTime *time.Time, dir string) error {
+func (c *crawler) putOutputToStorage(ctx context.Context, currentDateTime *time.Time, dir string) (string, error) {
 
 	filePath := filepath.Join(dir, fmt.Sprintf(`/output/%s.mp4`, currentDateTime.Format("2006-01-02-15-04-05")))
 
@@ -257,13 +267,14 @@ func (c *crawler) putOutputToStorage(ctx context.Context, currentDateTime *time.
 	file, err := os.Open(filePath)
 	if err != nil {
 		fmt.Println("err open file: ", err)
-		return err
+		return "", err
+
 	}
 
 	stat, err := file.Stat()
 	if err != nil {
 		fmt.Println("Error reading file stats: ", err)
-		return err
+		return "", err
 	}
 	stat.Size()
 
@@ -273,13 +284,13 @@ func (c *crawler) putOutputToStorage(ctx context.Context, currentDateTime *time.
 	data, err := io.ReadAll(file)
 	if err != nil {
 		fmt.Println("Error reading file: ", err)
-		return err
+		return "", err
 	}
 
-	if err := c.storage.Put(ctx, c.config.StorageBucket, filePath, data, stat.Size(), true, "video/mp4"); err != nil {
+	if err := c.storage.Put(ctx, c.config.StorageBucket, fmt.Sprintf(`/output/%s.mp4`, currentDateTime.Format("2006-01-02-15-04-05")), data, stat.Size(), true, "video/mp4"); err != nil {
 		fmt.Println("Error put file to storage: ", err)
-		return err
+		return "", err
 	}
 
-	return nil
+	return fmt.Sprintf(`/output/%s.mp4`, currentDateTime.Format("2006-01-02-15-04-05")), nil
 }
