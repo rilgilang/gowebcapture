@@ -8,6 +8,7 @@ import (
 type Video struct {
 	gorm.Model
 	ID          string    `gorm:"type:varchar(36);primary_key;unique" json:"id"`
+	UniqueId    string    `gorm:"type:varchar(255);unique" json:"unique_id"`
 	OriginalUrl string    `gorm:"type:text" json:"original_url"`
 	URL         string    `gorm:"type:text" json:"url"`
 	UserID      string    `gorm:"type:varchar(36)" json:"user_id"`
@@ -16,7 +17,8 @@ type Video struct {
 }
 
 type VideoQueuePayload struct {
-	ID     string `json:"id,omitempty"`
-	UserID string `json:"user_id,omitempty"`
-	URL    string `json:"url,omitempty"`
+	ID       string `json:"id,omitempty"`
+	UniqueId string `json:"unique_id"`
+	UserID   string `json:"user_id,omitempty"`
+	URL      string `json:"url,omitempty"`
 }

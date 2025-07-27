@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/devices"
@@ -18,24 +19,26 @@ import (
 )
 
 type Crawler interface {
-	RunBrowserAndInteract(ctx context.Context, urlLink string) error
+	RunBrowserAndInteract(ctx context.Context, uniqueId, urlLink string) error
 }
 
 type crawler struct {
 	storage   pkg.Storage
+	socket    pkg.Socket
 	videoRepo repositories.VideoRepository
 	config    *bootstrap.Config
 }
 
-func NewCrawler(storage pkg.Storage, videoRepo repositories.VideoRepository, config *bootstrap.Config) Crawler {
+func NewCrawler(storage pkg.Storage, socket pkg.Socket, videoRepo repositories.VideoRepository, config *bootstrap.Config) Crawler {
 	return &crawler{
 		storage:   storage,
+		socket:    socket,
 		videoRepo: videoRepo,
 		config:    config,
 	}
 }
 
-func (c *crawler) RunBrowserAndInteract(ctx context.Context, urlLink string) error {
+func (c *crawler) RunBrowserAndInteract(ctx context.Context, uniqueId, urlLink string) error {
 
 	path := ""
 	dir, _ := os.Getwd() // Used for output file
@@ -156,12 +159,20 @@ func (c *crawler) RunBrowserAndInteract(ctx context.Context, urlLink string) err
 	}
 
 	// Save directory location to db
-	_, err = c.videoRepo.SaveProcessedVideoURL(ctx, storagePath)
+	_, err = c.videoRepo.SaveProcessedVideoURL(ctx, uniqueId, storagePath)
 	if err != nil {
 		return err
 	}
 
-	//fmt.Println("jmbd")
+	msgStruct := struct {
+		UniqueID string `json:"unique_id"`
+		Status   string `json:"status"`
+	}{UniqueID: uniqueId,
+		Status: "done"}
+
+	msgBytes, _ := json.Marshal(msgStruct)
+
+	c.socket.Broadcast(ctx, "/", fmt.Sprintf(`%s`, string(msgBytes)))
 	return nil
 }
 
