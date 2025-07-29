@@ -132,5 +132,7 @@ COPY --from=builder /opt/brave.com /opt/brave.com
 # Make binary executable
 RUN chmod +x webcapture
 
+EXPOSE 8082
+
 # Launch Xvfb and run your app
 CMD ["sh", "-c", "Xvfb :99 -screen 0 450x850x24 -nocursor & ./webcapture"]

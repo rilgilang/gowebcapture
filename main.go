@@ -83,5 +83,5 @@ func socketServer(server *socketio.Server) {
 		server.ServeHTTP(context.Response(), context.Request())
 		return nil
 	})
-	e.Logger.Fatal(e.Start(":8000"))
+	e.Logger.Fatal(e.Start(":8082"))
 }
