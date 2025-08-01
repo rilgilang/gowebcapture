@@ -2,19 +2,14 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/go-rod/rod"
-	"github.com/go-rod/rod/lib/devices"
-	"github.com/go-rod/rod/lib/launcher"
 	"go/src/github.com/rilgilang/gowebcapture/bootstrap"
 	"go/src/github.com/rilgilang/gowebcapture/pkg"
 	"go/src/github.com/rilgilang/gowebcapture/repositories"
 	"io"
 	"os"
 	"path/filepath"
-	"runtime"
-	"strings"
 	"time"
 )
 
@@ -40,140 +35,153 @@ func NewCrawler(storage pkg.Storage, socket pkg.Socket, videoRepo repositories.V
 
 func (c *crawler) RunBrowserAndInteract(ctx context.Context, uniqueId, urlLink string) error {
 
-	path := ""
-	dir, _ := os.Getwd() // Used for output file
-
-	switch runtime.GOOS {
-	case "darwin":
-		// macOS with Brave Browser
-		path = c.config.DarwinBrowserPath
-	case "linux":
-		// Linux inside Docker with Google Chrome
-		path = c.config.LinuxBrowserPath
-	default:
-		fmt.Println("Unsupported OS:", runtime.GOOS)
-		os.Exit(1)
-	}
-
-	now := time.Now()
-
-	url := launcher.New().
-		Headless(true).
-		Delete("disable-gpu").
-		Set("hide-scrollbars"). // Hide scrollbars
-		Leakless(true)
-
-	if path != "" {
-		url.Bin(path)
-		url.RemoteDebuggingPort(3000)
-		// url.Set("display", ":99")
-	}
-
-	controlUrl := url.Headless(false).MustLaunch()
-
-	browser := rod.New().ControlURL(controlUrl).MustConnect()
-	defer browser.MustClose()
-
-	page := browser.MustPage("")      // open blank first
-	page.MustEmulate(devices.Nexus6P) // emulate full mobile device
-	page.MustSetWindow(0, 0, 450, 850)
-
-	page.MustNavigate(urlLink)
-
-	page.MustWaitLoad()
-
-	time.Sleep(2 * time.Second) // wait before exit
-
-	// Start ffmpeg
-	cmd, err := StartFFmpeg(&now, c.config, dir)
-	if err != nil {
-		fmt.Println("Failed to start ffmpeg:", err)
-		return err
-	}
-
-	// Find all possible clickable elements
-	elements := page.MustElements("a, button, div, span")
-
-	var target *rod.Element
-	for _, el := range elements {
-
-		text, err := el.Text()
-		if err != nil {
-			continue
-		}
-
-		if strings.EqualFold(strings.TrimSpace(text), "Buka Undangan") {
-			target = el
-			break
-		}
-		if strings.EqualFold(strings.TrimSpace(text), "Open The Invitation") {
-			target = el
-			break
-		}
-	}
-
-	if target == nil {
-		fmt.Println("Element with text 'Buka Undangan' not found")
-		time.Sleep(1 * time.Second) // wait before exit
-
-		err = StopFFmpeg(cmd)
-
-		e := os.Remove(fmt.Sprintf(`%s.mp4`, now.Format("2006-01-02-15-04-05")))
-		if e != nil {
-			fmt.Println("err --> ", err)
-		}
-
-		return err
-	}
-
-	time.Sleep(2 * time.Second) // First page wait
-
-	target.MustClick()
-
-	videoExists := page.MustEval(`() => !!document.querySelector("video.elementor-background-video-hosted")`).Bool()
-
-	if videoExists {
-		time.Sleep(13 * time.Second) // After Click button delay
-	} else {
-		time.Sleep(1 * time.Second) // After Click button delay
-	}
-
-	//TODO make throttle is configurable
-	scrollToBottomSmoothWithThrottle(page, 3, 15) // 30px max step, ~60fps (16ms delay)
-
-	//Stop ffmpeg
-	err = StopFFmpeg(cmd)
+	fmt.Println("ini wir")
+	file, err := c.storage.FileToBytes("docker-compose.yaml")
 	if err != nil {
 		return err
 	}
 
-	// Put output video to storage
-	storagePath, err := c.putOutputToStorage(ctx, &now, dir)
-	if err != nil {
+	if err := c.storage.Put(ctx, c.config.StorageBucket, fmt.Sprintf(`/output/%s.yaml`, time.Now().Format("2006-01-02-15-04-05")), file.Bytes, file.Size, true, "text/html"); err != nil {
+		fmt.Println("Error put file to storage: ", err)
 		return err
 	}
 
-	// Remove output when done
-	if err = deleteUnusedOutput(&now); err != nil {
-		return err
-	}
-
-	// Save directory location to db
-	_, err = c.videoRepo.SaveProcessedVideoURL(ctx, uniqueId, storagePath)
-	if err != nil {
-		return err
-	}
-
-	msgStruct := struct {
-		UniqueID string `json:"unique_id"`
-		Status   string `json:"status"`
-	}{UniqueID: uniqueId,
-		Status: "done"}
-
-	msgBytes, _ := json.Marshal(msgStruct)
-
-	c.socket.Broadcast(ctx, "/", fmt.Sprintf(`%s`, string(msgBytes)))
 	return nil
+
+	//path := ""
+	//dir, _ := os.Getwd() // Used for output file
+	//
+	//switch runtime.GOOS {
+	//case "darwin":
+	//	// macOS with Brave Browser
+	//	path = c.config.DarwinBrowserPath
+	//case "linux":
+	//	// Linux inside Docker with Google Chrome
+	//	path = c.config.LinuxBrowserPath
+	//default:
+	//	fmt.Println("Unsupported OS:", runtime.GOOS)
+	//	os.Exit(1)
+	//}
+	//
+	//now := time.Now()
+	//
+	//url := launcher.New().
+	//	Headless(true).
+	//	Delete("disable-gpu").
+	//	Set("hide-scrollbars"). // Hide scrollbars
+	//	Leakless(true)
+	//
+	//if path != "" {
+	//	url.Bin(path)
+	//	url.RemoteDebuggingPort(3000)
+	//	// url.Set("display", ":99")
+	//}
+	//
+	//controlUrl := url.Headless(false).MustLaunch()
+	//
+	//browser := rod.New().ControlURL(controlUrl).MustConnect()
+	//defer browser.MustClose()
+	//
+	//page := browser.MustPage("")      // open blank first
+	//page.MustEmulate(devices.Nexus6P) // emulate full mobile device
+	//page.MustSetWindow(0, 0, 450, 850)
+	//
+	//page.MustNavigate(urlLink)
+	//
+	//page.MustWaitLoad()
+	//
+	//time.Sleep(2 * time.Second) // wait before exit
+	//
+	//// Start ffmpeg
+	//cmd, err := StartFFmpeg(&now, c.config, dir)
+	//if err != nil {
+	//	fmt.Println("Failed to start ffmpeg:", err)
+	//	return err
+	//}
+	//
+	//// Find all possible clickable elements
+	//elements := page.MustElements("a, button, div, span")
+	//
+	//var target *rod.Element
+	//for _, el := range elements {
+	//
+	//	text, err := el.Text()
+	//	if err != nil {
+	//		continue
+	//	}
+	//
+	//	if strings.EqualFold(strings.TrimSpace(text), "Buka Undangan") {
+	//		target = el
+	//		break
+	//	}
+	//	if strings.EqualFold(strings.TrimSpace(text), "Open The Invitation") {
+	//		target = el
+	//		break
+	//	}
+	//}
+	//
+	//if target == nil {
+	//	fmt.Println("Element with text 'Buka Undangan' not found")
+	//	time.Sleep(1 * time.Second) // wait before exit
+	//
+	//	err = StopFFmpeg(cmd)
+	//
+	//	e := os.Remove(fmt.Sprintf(`%s.mp4`, now.Format("2006-01-02-15-04-05")))
+	//	if e != nil {
+	//		fmt.Println("err --> ", err)
+	//	}
+	//
+	//	return err
+	//}
+	//
+	//time.Sleep(2 * time.Second) // First page wait
+	//
+	//target.MustClick()
+	//
+	//videoExists := page.MustEval(`() => !!document.querySelector("video.elementor-background-video-hosted")`).Bool()
+	//
+	//if videoExists {
+	//	time.Sleep(13 * time.Second) // After Click button delay
+	//} else {
+	//	time.Sleep(1 * time.Second) // After Click button delay
+	//}
+	//
+	////TODO make throttle is configurable
+	//scrollToBottomSmoothWithThrottle(page, 3, 15) // 30px max step, ~60fps (16ms delay)
+	//
+	////Stop ffmpeg
+	//err = StopFFmpeg(cmd)
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//// Put output video to storage
+	//storagePath, err := c.putOutputToStorage(ctx, &now, dir)
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//// Remove output when done
+	//if err = deleteUnusedOutput(&now); err != nil {
+	//	return err
+	//}
+	//
+	//// Save directory location to db
+	//_, err = c.videoRepo.SaveProcessedVideoURL(ctx, uniqueId, storagePath)
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//msgStruct := struct {
+	//	UniqueID string `json:"unique_id"`
+	//	Status   string `json:"status"`
+	//}{UniqueID: uniqueId,
+	//	Status: "done"}
+	//
+	//msgBytes, _ := json.Marshal(msgStruct)
+	//
+	//c.socket.Broadcast(ctx, "/", fmt.Sprintf(`%s`, string(msgBytes)))
+	//return nil
 }
 
 func scrollToBottomSmoothWithThrottle(page *rod.Page, maxStep int, delayMs int) {
