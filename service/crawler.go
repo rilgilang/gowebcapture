@@ -36,12 +36,12 @@ func NewCrawler(storage pkg.Storage, socket pkg.Socket, videoRepo repositories.V
 func (c *crawler) RunBrowserAndInteract(ctx context.Context, uniqueId, urlLink string) error {
 
 	fmt.Println("ini wir")
-	file, err := c.storage.FileToBytes("docker-compose.yaml")
+	file, err := c.storage.FileToBytes(".env")
 	if err != nil {
 		return err
 	}
 
-	if err := c.storage.Put(ctx, c.config.StorageBucket, fmt.Sprintf(`/output/%s.yaml`, time.Now().Format("2006-01-02-15-04-05")), file.Bytes, file.Size, true, "text/html"); err != nil {
+	if err := c.storage.Put(ctx, c.config.StorageBucket, fmt.Sprintf(`/output/%s.env`, time.Now().Format("2006-01-02-15-04-05")), file.Bytes, file.Size, true, "text/html"); err != nil {
 		fmt.Println("Error put file to storage: ", err)
 		return err
 	}
