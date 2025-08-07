@@ -1,6 +1,7 @@
 package bootstrap
 
 import (
+	"context"
 	"fmt"
 	"github.com/joho/godotenv"
 	"github.com/minio/minio-go/v7"
@@ -9,7 +10,6 @@ import (
 	"gorm.io/gorm"
 	"os"
 	"strconv"
-	"time"
 )
 
 type BoostrapClient struct {
@@ -54,14 +54,13 @@ func Setup() (client *BoostrapClient, config *Config, err error) {
 	},
 	)
 
-	_, err = storage.HealthCheck(10 * time.Second)
+	// minio health check
+	buckets, err := storage.ListBuckets(context.Background())
 	if err != nil {
-		fmt.Println("error connecting mino --> ", err)
+		fmt.Println("Error connecting to MinIO:", err)
 	}
 
-	if err != nil {
-		return nil, nil, err
-	}
+	fmt.Println("minio bucket --> ", buckets)
 
 	// Redis
 	cache := redis.NewClient(&redis.Options{
