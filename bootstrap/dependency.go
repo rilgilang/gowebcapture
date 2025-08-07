@@ -48,8 +48,10 @@ func Setup() (client *BoostrapClient, config *Config, err error) {
 
 	// S3
 	storage, err := minio.New(config.StorageEndpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(config.StorageAccessKey, config.StorageSecretAccessKey, ""),
-		Secure: config.StorageSecure},
+		Creds:        credentials.NewStaticV4(config.StorageAccessKey, config.StorageSecretAccessKey, ""),
+		Secure:       config.StorageSecure,
+		BucketLookup: minio.BucketLookupPath,
+	},
 	)
 
 	_, err = storage.HealthCheck(10 * time.Second)
