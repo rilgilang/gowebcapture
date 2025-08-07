@@ -53,11 +53,14 @@ func Setup() (client *BoostrapClient, config *Config, err error) {
 		BucketLookup: minio.BucketLookupPath,
 	},
 	)
+	if err != nil {
+		fmt.Println("Error connecting to MinIO:", err)
+	}
 
 	// minio health check
 	buckets, err := storage.ListBuckets(context.Background())
 	if err != nil {
-		fmt.Println("Error connecting to MinIO:", err)
+		fmt.Println("Error get list of bucket MinIO:", err)
 	}
 
 	fmt.Println("minio bucket --> ", buckets)
