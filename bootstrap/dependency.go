@@ -54,7 +54,8 @@ func Setup() (client *BoostrapClient, config *Config, err error) {
 	},
 	)
 	if err != nil {
-		fmt.Println("Error connecting to MinIO:", err)
+		//fmt.Println("Error connecting to MinIO:", err)
+		panic(err)
 	}
 
 	// minio health check
