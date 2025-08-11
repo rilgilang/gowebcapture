@@ -1,8 +1,6 @@
 package bootstrap
 
 import (
-	"context"
-	"fmt"
 	"github.com/joho/godotenv"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -44,7 +42,7 @@ type Config struct {
 func Setup() (client *BoostrapClient, config *Config, err error) {
 	config = setupConfig()
 
-	fmt.Println("config --> ", config)
+	//fmt.Println("config --> ", config)
 
 	// S3
 	storage, err := minio.New(config.StorageEndpoint, &minio.Options{
@@ -54,16 +52,17 @@ func Setup() (client *BoostrapClient, config *Config, err error) {
 	},
 	)
 	if err != nil {
-		fmt.Println("Error connecting to MinIO:", err)
+		//fmt.Println("Error connecting to MinIO:", err)
+		panic(err)
 	}
 
-	// minio health check
-	buckets, err := storage.ListBuckets(context.Background())
-	if err != nil {
-		fmt.Println("Error get list of bucket MinIO:", err)
-	}
-
-	fmt.Println("minio bucket --> ", buckets)
+	//// minio health check
+	//buckets, err := storage.ListBuckets(context.Background())
+	//if err != nil {
+	//	fmt.Println("Error get list of bucket MinIO:", err)
+	//}
+	//
+	//fmt.Println("minio bucket --> ", buckets)
 
 	// Redis
 	cache := redis.NewClient(&redis.Options{
