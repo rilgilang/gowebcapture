@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/devices"
@@ -118,12 +118,12 @@ func (c *crawler) RunBrowserAndInteract(ctx context.Context, uniqueId, urlLink s
 
 		err = StopFFmpeg(cmd)
 
-		e := os.Remove(fmt.Sprintf(`%s.mp4`, now.Format("2006-01-02-15-04-05")))
-		if e != nil {
+		err = os.Remove(fmt.Sprintf(`%s.mp4`, now.Format("2006-01-02-15-04-05")))
+		if err != nil {
 			fmt.Println("err --> ", err)
 		}
 
-		return err
+		return errors.New("error element not found")
 	}
 
 	time.Sleep(2 * time.Second) // First page wait
@@ -164,15 +164,7 @@ func (c *crawler) RunBrowserAndInteract(ctx context.Context, uniqueId, urlLink s
 		return err
 	}
 
-	msgStruct := struct {
-		UniqueID string `json:"unique_id"`
-		Status   string `json:"status"`
-	}{UniqueID: uniqueId,
-		Status: "done"}
-
-	msgBytes, _ := json.Marshal(msgStruct)
-
-	c.socket.Broadcast(ctx, "/", fmt.Sprintf(`%s`, string(msgBytes)))
+	c.socket.VideoProcessingComplete(ctx, "/", uniqueId)
 	return nil
 }
 

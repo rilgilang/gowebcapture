@@ -6,7 +6,8 @@ import (
 )
 
 type Socket interface {
-	Broadcast(ctx context.Context, namespace string, message interface{})
+	VideoProcessingComplete(ctx context.Context, namespace string, message interface{})
+	VideoProcessingFail(ctx context.Context, namespace string, message interface{})
 }
 
 type socketPkg struct {
@@ -19,6 +20,10 @@ func NewSocket(server *socketio.Server) Socket {
 	}
 }
 
-func (s *socketPkg) Broadcast(ctx context.Context, namespace string, message interface{}) {
-	s.server.BroadcastToNamespace(namespace, "broadcast", message)
+func (s *socketPkg) VideoProcessingComplete(ctx context.Context, namespace string, message interface{}) {
+	s.server.BroadcastToNamespace(namespace, "video-complete", message)
+}
+
+func (s *socketPkg) VideoProcessingFail(ctx context.Context, namespace string, message interface{}) {
+	s.server.BroadcastToNamespace(namespace, "video-error", message)
 }

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	socketio "github.com/googollee/go-socket.io"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"go/src/github.com/rilgilang/gowebcapture/bootstrap"
 	"go/src/github.com/rilgilang/gowebcapture/entities"
 	"go/src/github.com/rilgilang/gowebcapture/pkg"
@@ -56,6 +57,7 @@ func main() {
 		err = crawler.RunBrowserAndInteract(ctx, payload.UniqueId, payload.URL)
 
 		if err != nil {
+			socket.VideoProcessingFail(ctx, "/", payload.UniqueId)
 			fmt.Println("err processing --> ", err)
 		}
 	}
@@ -76,7 +78,16 @@ func socketServer(server *socketio.Server) {
 	defer server.Close()
 
 	e := echo.New()
+	e.Use(middleware.CORS()) // Applies default CORS configuration
 	e.HideBanner = true
+
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{echo.GET, echo.PUT, echo.POST, echo.DELETE},
+		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+		AllowCredentials: true,
+		MaxAge:           3600, // Cache preflight requests for 1 hour
+	}))
 
 	e.Static("/", "../asset")
 	e.Any("/socket.io/", func(context echo.Context) error {
