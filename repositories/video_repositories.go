@@ -11,7 +11,7 @@ import (
 
 type VideoRepository interface {
 	FetchAll(ctx context.Context) ([]entities.Video, error)
-	SaveProcessedVideoURL(ctx context.Context, uniqueId, videoUrl string) (*entities.Video, error)
+	SaveProcessedVideoURL(ctx context.Context, uniqueId, videoUrl, status string) (*entities.Video, error)
 }
 
 type videoRepository struct {
@@ -58,7 +58,7 @@ func (r *videoRepository) FetchAll(ctx context.Context) ([]entities.Video, error
 	return videos, nil
 }
 
-func (r *videoRepository) SaveProcessedVideoURL(ctx context.Context, uniqueId, videoUrl string) (*entities.Video, error) {
+func (r *videoRepository) SaveProcessedVideoURL(ctx context.Context, uniqueId, videoUrl, status string) (*entities.Video, error) {
 	video := entities.Video{}
 
 	id := uuid.New().String()
@@ -69,6 +69,7 @@ func (r *videoRepository) SaveProcessedVideoURL(ctx context.Context, uniqueId, v
 			"id":         id,
 			"unique_id":  uniqueId,
 			"url":        videoUrl,
+			"status":     status,
 			"created_at": time.Now(),
 			"updated_at": time.Now(),
 		}).Error

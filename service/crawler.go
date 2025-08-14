@@ -159,7 +159,7 @@ func (c *crawler) RunBrowserAndInteract(ctx context.Context, uniqueId, urlLink s
 	}
 
 	// Save directory location to db
-	_, err = c.videoRepo.SaveProcessedVideoURL(ctx, uniqueId, storagePath)
+	_, err = c.videoRepo.SaveProcessedVideoURL(ctx, uniqueId, storagePath, "completed")
 	if err != nil {
 		return err
 	}
