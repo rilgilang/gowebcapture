@@ -36,7 +36,7 @@ func main() {
 
 	ctx := context.Background()
 
-	go socketServer(server)
+	//go socketServer(server)
 
 	for {
 		payload := entities.VideoQueuePayload{}
