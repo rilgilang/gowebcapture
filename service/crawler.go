@@ -139,7 +139,7 @@ func (c *crawler) RunBrowserAndInteract(ctx context.Context, uniqueId, urlLink s
 	}
 
 	//TODO make throttle is configurable
-	scrollToBottomSmoothWithThrottle(page, 3, 15) // 30px max step, ~60fps (16ms delay)
+	scrollToBottomSmoothWithThrottle(page, 20, 80) // 30px max step, ~60fps (16ms delay)
 
 	//Stop ffmpeg
 	err = StopFFmpeg(cmd)
